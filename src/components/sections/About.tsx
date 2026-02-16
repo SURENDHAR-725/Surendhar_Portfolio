@@ -78,7 +78,7 @@ export default function About() {
                             <div className="animate-pulse-glow" style={{ position: 'absolute', inset: '-1rem', borderRadius: '1.5rem', opacity: 0.5 }} />
                             <div className="about-image-box glass" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
                                 <img
-                                    src="/profile.jpg"
+                                    src="https://res.cloudinary.com/dwbbycyda/image/upload/v1771255854/WhatsApp_Image_2026-01-09_at_10.17.15_AM_hiwfei.jpg"
                                     alt="Surendhar K - Software Developer"
                                     style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
                                 />
