@@ -7,28 +7,30 @@ gsap.registerPlugin(ScrollTrigger);
 
 function AnimatedCounter({ target, decimals = 0, suffix = '' }: { target: number; decimals: number; suffix: string }) {
     const [value, setValue] = useState(0);
+    const [triggered, setTriggered] = useState(false);
     const ref = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) {
+                if (entry.isIntersecting && !triggered) {
+                    setTriggered(true);
                     const obj = { val: 0 };
                     gsap.to(obj, {
-                        val: target, duration: 2, ease: 'power2.out',
+                        val: target, duration: 2.2, ease: 'power3.out',
                         onUpdate: () => setValue(obj.val),
                     });
                     observer.disconnect();
                 }
             },
-            { threshold: 0.5 }
+            { threshold: 0.4 }
         );
         if (ref.current) observer.observe(ref.current);
         return () => observer.disconnect();
-    }, [target]);
+    }, [target, triggered]);
 
     return (
-        <span ref={ref} className="stat-value gradient-text">
+        <span ref={ref}>
             {decimals > 0 ? value.toFixed(decimals) : Math.round(value)}{suffix}
         </span>
     );
@@ -51,7 +53,7 @@ export default function About() {
                 opacity: 1, y: 0, duration: 0.6, stagger: 0.15,
                 scrollTrigger: { trigger: '.about-text-content', start: 'top 80%' },
             });
-            gsap.fromTo('.stat-card', { opacity: 0, y: 40, scale: 0.9 }, {
+            gsap.fromTo('.stat-card-pro', { opacity: 0, y: 40, scale: 0.9 }, {
                 opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)',
                 scrollTrigger: { trigger: '.stats-grid', start: 'top 85%' },
             });
@@ -78,7 +80,7 @@ export default function About() {
                             <div className="animate-pulse-glow" style={{ position: 'absolute', inset: '-1rem', borderRadius: '1.5rem', opacity: 0.5 }} />
                             <div className="about-image-box glass" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
                                 <img
-                                    src="https://res.cloudinary.com/dwbbycyda/image/upload/v1771255854/WhatsApp_Image_2026-01-09_at_10.17.15_AM_hiwfei.jpg"
+                                    src="/profile.png"
                                     alt="Surendhar K - Software Developer"
                                     style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
                                 />
@@ -122,10 +124,19 @@ export default function About() {
 
                 {/* Stats */}
                 <div className="stats-grid">
-                    {stats.map((stat) => (
-                        <div key={stat.label} className="stat-card glass">
-                            <AnimatedCounter target={stat.value} decimals={stat.decimals} suffix={stat.suffix} />
-                            <p className="stat-label">{stat.label}</p>
+                    {stats.map((stat, i) => (
+                        <div key={stat.label} className="stat-card-pro" style={{ animationDelay: `${i * 0.1}s` }}>
+                            {/* Gradient border effect */}
+                            <div className="stat-card-pro-border" />
+                            {/* Shimmer sweep */}
+                            <div className="stat-card-pro-shimmer" />
+                            {/* Content */}
+                            <div className="stat-card-pro-inner">
+                                <p className="stat-card-pro-value">
+                                    <AnimatedCounter target={stat.value} decimals={stat.decimals} suffix={stat.suffix} />
+                                </p>
+                                <p className="stat-card-pro-label">{stat.label}</p>
+                            </div>
                         </div>
                     ))}
                 </div>

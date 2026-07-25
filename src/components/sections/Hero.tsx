@@ -5,7 +5,6 @@ import { TypeAnimation } from 'react-type-animation';
 
 export default function Hero() {
     const sectionRef = useRef<HTMLElement>(null);
-    const nameRef = useRef<HTMLHeadingElement>(null);
     const subtitleRef = useRef<HTMLDivElement>(null);
     const ctaRef = useRef<HTMLDivElement>(null);
     const iconsRef = useRef<HTMLDivElement>(null);
@@ -23,18 +22,7 @@ export default function Hero() {
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-            if (nameRef.current) {
-                const chars = nameRef.current.innerText.split('');
-                nameRef.current.innerHTML = chars
-                    .map((c) => `<span style="display:inline-block;opacity:0;transform:translateY(60px)">${c === ' ' ? '&nbsp;' : c}</span>`)
-                    .join('');
-
-                tl.to(nameRef.current.querySelectorAll('span'), {
-                    opacity: 1, y: 0, duration: 0.6, stagger: 0.04, ease: 'back.out(1.7)',
-                });
-            }
-
-            tl.fromTo(subtitleRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.3');
+            tl.fromTo(subtitleRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, '+=0.8');
 
             if (ctaRef.current) {
                 tl.fromTo(
@@ -87,7 +75,15 @@ export default function Hero() {
             <div className="hero-content">
                 <p className="hero-greeting">Hello, I'm</p>
 
-                <h1 ref={nameRef} className="hero-name gradient-text">{personalInfo.name}</h1>
+                <h1 className="hero-name gradient-text">
+                    <TypeAnimation
+                        sequence={[personalInfo.name]}
+                        wrapper="span"
+                        speed={60}
+                        cursor={false}
+                        repeat={0}
+                    />
+                </h1>
 
                 <div ref={subtitleRef} className="hero-subtitle-wrap">
                     <TypeAnimation

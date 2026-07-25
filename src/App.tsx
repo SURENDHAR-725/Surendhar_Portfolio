@@ -4,6 +4,8 @@ import CustomCursor from './components/ui/CustomCursor';
 import Preloader from './components/ui/Preloader';
 import ScrollProgress from './components/ui/ScrollProgress';
 import Navbar from './components/ui/Navbar';
+import StarField from './components/ui/StarField';
+import BottomNav from './components/ui/BottomNav';
 import Hero from './components/sections/Hero';
 import About from './components/sections/About';
 import Skills from './components/sections/Skills';
@@ -22,6 +24,9 @@ function App() {
 
   return (
     <>
+      {/* Starfield Background */}
+      <StarField />
+
       {/* Preloader */}
       {!loaded && <Preloader onComplete={handlePreloaderComplete} />}
 
@@ -44,6 +49,9 @@ function App() {
         <Achievements />
         <Contact />
       </main>
+
+      {/* Bottom Limelight Navigation */}
+      <BottomNav />
     </>
   );
 }

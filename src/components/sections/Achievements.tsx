@@ -2,9 +2,107 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { certifications, achievements } from '../../data/portfolio';
+import * as pdfjsLib from 'pdfjs-dist';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Set up the PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.mjs',
+    import.meta.url
+).toString();
+
+// ── PDF Image Renderer ────────────────────────────────────────────────────────
+function PdfCertImage({ pdfUrl, color }: { pdfUrl: string; color: string }) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [loaded, setLoaded] = useState(false);
+    const [error, setError] = useState(false);
+    const renderTaskRef = useRef<{ cancelled: boolean } | null>(null);
+
+    useEffect(() => {
+        if (!pdfUrl) {
+            setError(true);
+            return;
+        }
+
+        // Cancel any previous render
+        if (renderTaskRef.current) {
+            renderTaskRef.current.cancelled = true;
+        }
+        const task = { cancelled: false };
+        renderTaskRef.current = task;
+
+        let loadingTask: ReturnType<typeof pdfjsLib.getDocument> | null = null;
+
+        const doRender = async () => {
+            try {
+                loadingTask = pdfjsLib.getDocument(pdfUrl);
+                const pdf = await loadingTask.promise;
+                if (task.cancelled) return;
+
+                const page = await pdf.getPage(1);
+                if (task.cancelled) return;
+
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                // Render at 1.5x for sharpness while keeping performance
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                const renderTask = page.render({
+                    canvasContext: ctx,
+                    viewport,
+                });
+
+                await renderTask.promise;
+                if (!task.cancelled) {
+                    setLoaded(true);
+                }
+            } catch (err) {
+                if (!task.cancelled) {
+                    console.error('PDF render error:', err);
+                    setError(true);
+                }
+            }
+        };
+
+        doRender();
+
+        return () => {
+            task.cancelled = true;
+            if (loadingTask) {
+                loadingTask.destroy();
+            }
+        };
+    }, [pdfUrl]);
+
+    if (error || !pdfUrl) {
+        return (
+            <div className="cert-img-placeholder" style={{ background: `${color}10` }}>
+                <span style={{ fontSize: '3rem' }}>📜</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`cert-img-wrapper ${loaded ? 'loaded' : ''}`}>
+            <canvas ref={canvasRef} className="cert-pdf-canvas" />
+            {!loaded && (
+                <div className="cert-img-loading" style={{ borderColor: `${color}40` }}>
+                    <div className="cert-loading-spinner" style={{ borderTopColor: color }} />
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Certificate Card ──────────────────────────────────────────────────────────
 function CertCard({ cert, index }: { cert: typeof certifications[0]; index: number }) {
     const [flipped, setFlipped] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -24,13 +122,21 @@ function CertCard({ cert, index }: { cert: typeof certifications[0]; index: numb
         <div ref={cardRef} className="cert-card-container"
             onClick={() => setFlipped(!flipped)} onMouseLeave={() => setFlipped(false)} data-cursor-hover>
             <div className={`cert-card-inner ${flipped ? 'flipped' : ''}`}>
-                {/* Front */}
+                {/* Front - Certificate Image */}
                 <div className="cert-card-face glass" style={{ borderColor: `${cert.color}30` }}>
-                    <div className="cert-icon-box" style={{ background: `${cert.color}15`, boxShadow: `0 0 30px ${cert.color}20` }}>
-                        {cert.icon}
+                    <div className="cert-card-image-area">
+                        {cert.imageUrl ? (
+                            <div className="cert-img-wrapper loaded">
+                                <img src={cert.imageUrl} alt={cert.title} className="cert-pdf-canvas" style={{ objectFit: 'contain', padding: '0.25rem' }} />
+                            </div>
+                        ) : (
+                            <PdfCertImage pdfUrl={cert.pdfUrl} color={cert.color} />
+                        )}
                     </div>
-                    <h3 className="cert-title">{cert.title}</h3>
-                    <p className="cert-issuer" style={{ color: cert.color }}>{cert.issuer}</p>
+                    <div className="cert-card-info">
+                        <h3 className="cert-title">{cert.title}</h3>
+                        <p className="cert-issuer" style={{ color: cert.color }}>{cert.issuer}</p>
+                    </div>
                     <p className="cert-hint">Click to learn more →</p>
                 </div>
                 {/* Back */}
@@ -40,12 +146,35 @@ function CertCard({ cert, index }: { cert: typeof certifications[0]; index: numb
                     <div className="cert-verified-badge" style={{ background: `${cert.color}20`, color: cert.color }}>
                         Verified ✓
                     </div>
+                    {(cert.pdfUrl || cert.imageUrl) && (
+                        <a
+                            href={cert.imageUrl || cert.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                marginTop: '0.75rem',
+                                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                                fontSize: '0.75rem', padding: '0.4rem 1rem', borderRadius: 9999,
+                                background: `${cert.color}20`, color: cert.color,
+                                border: `1px solid ${cert.color}50`,
+                                textDecoration: 'none', fontWeight: 600,
+                                transition: 'background 0.2s',
+                            }}
+                        >
+                            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            View Certificate
+                        </a>
+                    )}
                 </div>
             </div>
         </div>
     );
 }
 
+// ── Main Section ──────────────────────────────────────────────────────────────
 export default function Achievements() {
     const sectionRef = useRef<HTMLElement>(null);
 
