@@ -10,7 +10,13 @@ export function useSmoothScroll() {
 
     useEffect(() => {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReducedMotion) return;
+
+        // If user prefers reduced motion, skip Lenis smooth scrolling
+        // but still let GSAP ScrollTrigger work with native scroll
+        if (prefersReducedMotion) {
+            ScrollTrigger.refresh();
+            return;
+        }
 
         const lenis = new Lenis({
             duration: 1.2,
@@ -23,15 +29,18 @@ export function useSmoothScroll() {
 
         lenis.on('scroll', ScrollTrigger.update);
 
-        gsap.ticker.add((time) => {
+        // Store callback reference so we can properly remove it on cleanup
+        const rafCallback = (time: number) => {
             lenis.raf(time * 1000);
-        });
+        };
 
+        gsap.ticker.add(rafCallback);
         gsap.ticker.lagSmoothing(0);
 
         return () => {
             lenis.destroy();
-            gsap.ticker.remove(lenis.raf);
+            lenisRef.current = null;
+            gsap.ticker.remove(rafCallback);
         };
     }, []);
 

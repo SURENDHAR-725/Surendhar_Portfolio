@@ -809,31 +809,34 @@ body {
 .certs-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .cert-card-container {
-  perspective: 1000px;
+  perspective: 1200px;
   cursor: pointer;
+  position: relative;
+  border-radius: 1.5rem;
+  transition: filter 0.3s ease;
 }
 
 .cert-card-inner {
   position: relative;
   width: 100%;
-  height: 22rem;
-  transition: transform 0.7s ease;
+  height: 23rem;
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .cert-card-inner.flipped {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) !important;
 }
 
 .cert-card-face {
   position: absolute;
   inset: 0;
   border-radius: 1.5rem;
-  padding: 0.75rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -841,12 +844,50 @@ body {
   text-align: center;
   backface-visibility: hidden;
   overflow: hidden;
+  transform-style: preserve-3d;
+  background: rgba(13, 18, 36, 0.65);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+}
+
+/* Light reflection / Sheen sweep effect */
+.cert-card-sheen {
+  position: absolute;
+  inset: -100%;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.08) 48%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.08) 52%,
+    transparent 60%
+  );
+  transform: translateX(-100%) translateY(-100%);
+  pointer-events: none;
+  z-index: 10;
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cert-card-container:hover .cert-card-sheen {
+  transform: translateX(100%) translateY(100%);
 }
 
 .cert-card-back {
   transform: rotateY(180deg);
   justify-content: center;
-  padding: 1.25rem;
+  padding: 1.5rem;
+}
+
+.cert-card-back-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
 }
 
 /* Certificate image area */
@@ -857,7 +898,14 @@ body {
   border-radius: 1rem;
   overflow: hidden;
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) inset;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.cert-card-container:hover .cert-card-image-area {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
 .cert-img-wrapper {
@@ -879,6 +927,11 @@ body {
   height: 100%;
   object-fit: contain;
   border-radius: 0.75rem;
+  transition: transform 0.4s ease;
+}
+
+.cert-card-container:hover .cert-pdf-canvas {
+  transform: scale(1.02);
 }
 
 .cert-img-placeholder {
@@ -897,7 +950,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .cert-loading-spinner {
@@ -915,46 +968,64 @@ body {
 
 /* Card info below image */
 .cert-card-info {
-  padding: 0.5rem 0.25rem 0;
+  padding: 0.65rem 0.25rem 0;
   width: 100%;
   flex-shrink: 0;
-}
-
-.cert-icon-box {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  margin-bottom: 0.75rem;
+  transition: transform 0.4s ease;
 }
 
 .cert-title {
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: white;
-  margin-bottom: 0.15rem;
+  color: #ffffff;
+  margin-bottom: 0.2rem;
   font-family: var(--font-heading);
   line-height: 1.3;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .cert-issuer {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .cert-hint {
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.3);
-  margin-top: 0.25rem;
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.3rem;
   flex-shrink: 0;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.cert-card-container:hover .cert-hint {
+  color: var(--electric-blue);
 }
 
 .cert-back-desc {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1.6;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.cert-verified-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.25rem 0.85rem;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.cert-view-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: brightness(1.2);
 }
 
 .cert-verified-badge {
@@ -1790,29 +1861,43 @@ body {
   50%       { opacity: 1; }
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
 .stat-card-pro {
   position: relative;
-  border-radius: 1.25rem;
-  padding: 2px;
-  background: linear-gradient(135deg, rgba(0,212,255,0.5), rgba(139,92,246,0.5));
+  border-radius: 1rem;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(139, 92, 246, 0.3));
   overflow: hidden;
   cursor: default;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
 }
 
 .stat-card-pro:hover {
-  transform: translateY(-4px) scale(1.03);
-  box-shadow: 0 0 32px rgba(0, 212, 255, 0.25), 0 0 60px rgba(139, 92, 246, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -8px rgba(0, 212, 255, 0.25), 0 0 20px -4px rgba(139, 92, 246, 0.2);
 }
 
 .stat-card-pro-border {
   position: absolute;
   inset: 0;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   background: linear-gradient(135deg, #00D4FF, #8B5CF6, #00FF88, #00D4FF);
   background-size: 300% 300%;
-  animation: gradient-shift 4s ease infinite, stat-border-glow 3s ease-in-out infinite;
-  opacity: 0.6;
+  animation: gradient-shift 5s ease infinite, stat-border-glow 3s ease-in-out infinite;
+  opacity: 0.45;
   z-index: 0;
 }
 
@@ -1822,7 +1907,7 @@ body {
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
 }
 
 .stat-card-pro-shimmer::after {
@@ -1835,7 +1920,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.1),
     transparent
   );
   animation: stat-shimmer 3s ease-in-out infinite;
@@ -1844,35 +1929,40 @@ body {
 .stat-card-pro-inner {
   position: relative;
   z-index: 2;
-  background: #0d1224;
-  border-radius: 1.1rem;
-  padding: 1.75rem 1.25rem;
+  background: rgba(11, 16, 32, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 0.95rem;
+  padding: 1.1rem 0.85rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.35rem;
   height: 100%;
 }
 
 .stat-card-pro-value {
-  font-size: 2rem;
+  font-size: 1.65rem;
   font-weight: 800;
   font-family: var(--font-heading);
   background: linear-gradient(135deg, #00D4FF, #8B5CF6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1;
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
 .stat-card-pro-label {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   font-family: var(--font-mono);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Stagger each card's shimmer timing */
@@ -1880,10 +1970,10 @@ body {
 .stat-card-pro:nth-child(3) .stat-card-pro-shimmer::after { animation-delay: 1.5s; }
 .stat-card-pro:nth-child(4) .stat-card-pro-shimmer::after { animation-delay: 2.25s; }
 
-@media (min-width: 640px) {
-  .stat-card-pro-value { font-size: 2.5rem; }
-  .stat-card-pro-inner { padding: 2rem 1.5rem; }
-  .stat-card-pro-label { font-size: 0.8rem; }
+@media (min-width: 768px) {
+  .stat-card-pro-value { font-size: 1.85rem; }
+  .stat-card-pro-inner { padding: 1.25rem 1rem; }
+  .stat-card-pro-label { font-size: 0.68rem; }
 }
 
 /* ===================================================

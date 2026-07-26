@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { personalInfo } from '../../data/portfolio';
+import { LampContainer } from '../ui/lamp';
+import { motion } from 'motion/react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,10 +14,6 @@ export default function Contact() {
 
     useEffect(() => {
         const ctx = gsap.context(() => {
-            gsap.fromTo('.contact-heading', { opacity: 0, y: 60 }, {
-                opacity: 1, y: 0, duration: 0.8,
-                scrollTrigger: { trigger: '.contact-heading', start: 'top 85%' },
-            });
             gsap.fromTo('.contact-info > *', { opacity: 0, x: -40 }, {
                 opacity: 1, x: 0, duration: 0.6, stagger: 0.1,
                 scrollTrigger: { trigger: '.contact-info', start: 'top 80%' },
@@ -45,16 +43,29 @@ export default function Contact() {
     ];
 
     return (
-        <section ref={sectionRef} id="contact" className="section-padding relative overflow-hidden">
+        <section ref={sectionRef} id="contact" className="section-padding relative overflow-hidden pt-0">
             <div className="bg-orb" style={{ top: 0, left: '25%', width: 500, height: 500, opacity: 0.1, filter: 'blur(120px)', background: 'radial-gradient(circle, #8B5CF6, transparent)' }} />
 
-            <div className="section-container" style={{ maxWidth: 1000 }}>
-                {/* Header */}
-                <div className="contact-heading" style={{ marginBottom: '3rem', textAlign: 'center' }}>
-                    <p className="section-label" style={{ color: 'var(--vibrant-purple)' }}>Let's connect</p>
-                    <h2 className="section-title">Get in <span className="gradient-text">Touch</span></h2>
-                </div>
+            {/* Lamp Section Header */}
+            <LampContainer className="mb-[-2rem]">
+                <motion.div
+                    initial={{ opacity: 0.5, y: 80 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{
+                        delay: 0.3,
+                        duration: 0.8,
+                        ease: "easeInOut",
+                    }}
+                    className="contact-heading text-center"
+                >
+                    <p className="section-label" style={{ color: 'var(--electric-blue)' }}>Let's connect</p>
+                    <h2 className="section-title text-4xl md:text-6xl font-bold tracking-tight">
+                        Get in <span className="gradient-text">Touch</span>
+                    </h2>
+                </motion.div>
+            </LampContainer>
 
+            <div className="section-container" style={{ maxWidth: 1000 }}>
                 <div className="contact-grid">
                     {/* Info */}
                     <div className="contact-info" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
