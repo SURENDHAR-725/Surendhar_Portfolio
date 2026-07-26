@@ -9,15 +9,7 @@ export function useSmoothScroll() {
     const lenisRef = useRef<Lenis | null>(null);
 
     useEffect(() => {
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        // If user prefers reduced motion, skip Lenis smooth scrolling
-        // but still let GSAP ScrollTrigger work with native scroll
-        if (prefersReducedMotion) {
-            ScrollTrigger.refresh();
-            return;
-        }
-
+        // Create Lenis instance for smooth scrolling
         const lenis = new Lenis({
             duration: 1.2,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -27,20 +19,38 @@ export function useSmoothScroll() {
 
         lenisRef.current = lenis;
 
+        // Connect Lenis scroll events to ScrollTrigger
         lenis.on('scroll', ScrollTrigger.update);
 
-        // Store callback reference so we can properly remove it on cleanup
+        // Drive Lenis via GSAP ticker for consistent frame timing
         const rafCallback = (time: number) => {
             lenis.raf(time * 1000);
         };
-
         gsap.ticker.add(rafCallback);
         gsap.ticker.lagSmoothing(0);
 
+        // Also drive Lenis via requestAnimationFrame as a fallback
+        // This ensures smooth scrolling works even if GSAP ticker behaves
+        // differently across browsers
+        let rafId: number;
+        function raf(time: number) {
+            lenis.raf(time);
+            rafId = requestAnimationFrame(raf);
+        }
+        rafId = requestAnimationFrame(raf);
+
+        // Delayed ScrollTrigger refresh to ensure all components have mounted
+        // and trigger positions are correctly computed
+        const refreshTimeout = setTimeout(() => {
+            ScrollTrigger.refresh();
+        }, 500);
+
         return () => {
+            clearTimeout(refreshTimeout);
+            cancelAnimationFrame(rafId);
+            gsap.ticker.remove(rafCallback);
             lenis.destroy();
             lenisRef.current = null;
-            gsap.ticker.remove(rafCallback);
         };
     }, []);
 

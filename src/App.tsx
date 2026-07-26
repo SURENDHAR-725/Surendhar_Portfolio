@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSmoothScroll } from './hooks/useSmoothScroll';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import CustomCursor from './components/ui/CustomCursor';
 import Preloader from './components/ui/Preloader';
 import ScrollProgress from './components/ui/ScrollProgress';
@@ -21,6 +23,16 @@ function App() {
   const handlePreloaderComplete = useCallback(() => {
     setLoaded(true);
   }, []);
+
+  // Refresh ScrollTrigger after all components mount and after preloader finishes
+  // This ensures Chrome computes correct trigger positions
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    const timeout = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [loaded]);
 
   return (
     <>

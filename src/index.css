@@ -61,6 +61,22 @@ body {
   cursor: none;
 }
 
+/* ===== GPU Acceleration for Animated Elements ===== */
+.hero-content,
+.hero-floating-icons > *,
+.bg-orb,
+.starfield-container,
+.starfield-container > div,
+section,
+.project-accordion-item,
+.stat-card-pro,
+canvas,
+.lamp-wrapper {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 /* ===== Custom Cursor ===== */
 @media (pointer: fine) {
   * {
