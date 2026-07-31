@@ -2,8 +2,46 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { personalInfo, education, stats } from '../../data/portfolio';
+import LogoLoop from '../ui/LogoLoop';
+import {
+  SiReact,
+  SiTypescript,
+  SiHtml5,
+  SiCss,
+  SiBootstrap,
+  SiPython,
+  SiTensorflow,
+  SiOpencv,
+  SiGit,
+  SiGithub,
+  SiPostman,
+  SiFigma,
+  SiGooglecolab,
+} from 'react-icons/si';
+import { FaJava, FaDatabase, FaAws } from 'react-icons/fa';
+import { VscVscode } from 'react-icons/vsc';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const skillLogos = [
+  { node: <FaJava style={{ color: '#f89820' }} />, title: 'Java' },
+  { node: <SiPython style={{ color: '#3776AB' }} />, title: 'Python' },
+  { node: <FaDatabase style={{ color: '#336791' }} />, title: 'SQL' },
+  { node: <SiReact style={{ color: '#61DAFB' }} />, title: 'React' },
+  { node: <SiTypescript style={{ color: '#3178C6' }} />, title: 'TypeScript' },
+  { node: <SiHtml5 style={{ color: '#E34F26' }} />, title: 'HTML5' },
+  { node: <SiCss style={{ color: '#1572B6' }} />, title: 'CSS3' },
+  { node: <SiBootstrap style={{ color: '#7952B3' }} />, title: 'Bootstrap' },
+  { node: <FaAws style={{ color: '#FF9900' }} />, title: 'AWS' },
+  { node: <SiGit style={{ color: '#F05032' }} />, title: 'Git' },
+  { node: <SiGithub style={{ color: '#ffffff' }} />, title: 'GitHub' },
+  { node: <SiTensorflow style={{ color: '#FF6F00' }} />, title: 'TensorFlow' },
+  { node: <SiOpencv style={{ color: '#5C3EE8' }} />, title: 'OpenCV' },
+  { node: <SiFigma style={{ color: '#F24E1E' }} />, title: 'Figma' },
+  { node: <VscVscode style={{ color: '#007ACC' }} />, title: 'VS Code' },
+  { node: <SiPostman style={{ color: '#FF6C37' }} />, title: 'Postman' },
+  { node: <SiGooglecolab style={{ color: '#F9AB00' }} />, title: 'Google Colab' },
+];
 
 function AnimatedCounter({ target, decimals = 0, suffix = '' }: { target: number; decimals: number; suffix: string }) {
     const [value, setValue] = useState(0);
@@ -65,8 +103,23 @@ export default function About() {
         <section ref={sectionRef} id="about" className="section-padding relative overflow-hidden">
             <div className="bg-orb" style={{ top: 0, right: 0, width: 400, height: 400, opacity: 0.1, filter: 'blur(100px)', background: 'radial-gradient(circle, #00D4FF, transparent)' }} />
 
+            {/* Scrolling Skill Logos — full bleed */}
+            <div className="about-logoloop-wrapper">
+                <LogoLoop
+                    logos={skillLogos}
+                    speed={80}
+                    direction="left"
+                    logoHeight={36}
+                    gap={48}
+                    hoverSpeed={0}
+                    scaleOnHover
+                    fadeOut
+                    fadeOutColor="var(--deep-navy)"
+                    ariaLabel="Technology skills"
+                />
+            </div>
+
             <div className="section-container" style={{ maxWidth: 1200 }}>
-                {/* Header */}
                 <div className="about-heading" style={{ marginBottom: '3rem', textAlign: 'center' }}>
                     <p className="section-label" style={{ color: 'var(--electric-blue)' }}>Get to know me</p>
                     <h2 className="section-title">About <span className="gradient-text">Me</span></h2>
