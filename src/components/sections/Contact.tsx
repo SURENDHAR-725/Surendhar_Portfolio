@@ -3,14 +3,23 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { personalInfo } from '../../data/portfolio';
 import { LampContainer } from '../ui/lamp';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import AnimatedKeyboard from '../ui/AnimatedKeyboard';
+import { playMacbookClickSound } from '../../utils/sound';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Contact() {
     const sectionRef = useRef<HTMLElement>(null);
+    const keyboardContainerRef = useRef<HTMLDivElement>(null);
+    const toggleButtonRef = useRef<HTMLButtonElement>(null);
+    const formRef = useRef<HTMLFormElement>(null);
+
     const [formState, setFormState] = useState({ name: '', email: '', subject: '', message: '' });
     const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+    const [showKeyboard, setShowKeyboard] = useState(false);
+    const [focusedField, setFocusedField] = useState<'name' | 'email' | 'subject' | 'message'>('name');
+    const [activeKey, setActiveKey] = useState<string | null>(null);
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -25,6 +34,64 @@ export default function Contact() {
         }, sectionRef);
         return () => ctx.revert();
     }, []);
+
+    // Close keyboard when clicking anywhere outside keyboard container, form inputs, or toggle button
+    useEffect(() => {
+        if (!showKeyboard) return;
+
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as Node;
+            if (
+                keyboardContainerRef.current && !keyboardContainerRef.current.contains(target) &&
+                formRef.current && !formRef.current.contains(target) &&
+                toggleButtonRef.current && !toggleButtonRef.current.contains(target)
+            ) {
+                setShowKeyboard(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [showKeyboard]);
+
+    // Listen for physical keyboard key presses to trigger key lighting animation & sound effect
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Avoid duplicate sound if typing modifier keys repeatedly or meta
+            if (e.key !== 'Control' && e.key !== 'Alt' && e.key !== 'Meta') {
+                playMacbookClickSound(e.key);
+            }
+            setActiveKey(e.key);
+            setTimeout(() => {
+                setActiveKey(null);
+            }, 200);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const handleVirtualKeyPress = (char: string) => {
+        setActiveKey(char);
+        setTimeout(() => setActiveKey(null), 200);
+
+        setFormState((prev) => {
+            const currentVal = prev[focusedField];
+            if (char === 'Backspace') {
+                return { ...prev, [focusedField]: currentVal.slice(0, -1) };
+            }
+            if (char === 'Enter') {
+                return { ...prev, [focusedField]: currentVal + '\n' };
+            }
+            if (char === 'Tab' || char === 'Shift') {
+                return prev;
+            }
+            return { ...prev, [focusedField]: currentVal + char };
+        });
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,8 +129,58 @@ export default function Contact() {
                     <h2 className="section-title text-4xl md:text-6xl font-bold tracking-tight">
                         Get in <span className="gradient-text">Touch</span>
                     </h2>
+                    
+                    {/* Start Typing Button */}
+                    <motion.div 
+                        className="mt-6 flex justify-center"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <button
+                            ref={toggleButtonRef}
+                            type="button"
+                            onClick={() => setShowKeyboard((prev) => !prev)}
+                            className="group relative inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/10 border border-cyan-500/40 backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-cyan-400 hover:shadow-cyan-500/25 active:scale-95"
+                        >
+                            <span className="text-lg transition-transform duration-300 group-hover:rotate-12">⌨️</span>
+                            <span>{showKeyboard ? 'Hide Keyboard' : 'Start Typing'}</span>
+                            <span className="inline-flex h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+                        </button>
+                    </motion.div>
                 </motion.div>
             </LampContainer>
+
+            {/* Animated Interactive Keyboard Drawer */}
+            <AnimatePresence>
+                {showKeyboard && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0, y: -20 }}
+                        animate={{ opacity: 1, height: 'auto', y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden mb-12 flex flex-col items-center justify-center px-4"
+                    >
+                        <div ref={keyboardContainerRef} className="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-slate-950/80 p-4 backdrop-blur-xl shadow-2xl shadow-cyan-500/10 relative">
+                            <div className="flex items-center justify-between px-3 pb-3 border-b border-white/10 mb-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="inline-block h-3 w-3 rounded-full bg-red-500/80" />
+                                    <span className="inline-block h-3 w-3 rounded-full bg-yellow-500/80" />
+                                    <span className="inline-block h-3 w-3 rounded-full bg-green-500/80" />
+                                    <span className="ml-2 text-xs font-mono text-cyan-300/80">Interactive RGB Keyboard — Click or type to write in form ({focusedField.toUpperCase()})</span>
+                                </div>
+                                <button
+                                    onClick={() => setShowKeyboard(false)}
+                                    className="text-xs font-medium text-slate-400 hover:text-white transition-colors px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                                >
+                                    ✕ Close
+                                </button>
+                            </div>
+                            <AnimatedKeyboard onKeyPress={handleVirtualKeyPress} activeKey={activeKey} />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="section-container" style={{ maxWidth: 1000 }}>
                 <div className="contact-grid">
@@ -100,17 +217,19 @@ export default function Contact() {
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit} className="contact-form glass" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <form ref={formRef} onSubmit={handleSubmit} className="contact-form glass" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div className="contact-form-grid">
                             <div>
                                 <label className="form-label">Name</label>
                                 <input type="text" required value={formState.name}
+                                    onFocus={() => { setFocusedField('name'); setShowKeyboard(true); }}
                                     onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                                     className="form-input" placeholder="John Doe" />
                             </div>
                             <div>
                                 <label className="form-label">Email</label>
                                 <input type="email" required value={formState.email}
+                                    onFocus={() => { setFocusedField('email'); setShowKeyboard(true); }}
                                     onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                                     className="form-input" placeholder="john@example.com" />
                             </div>
@@ -118,12 +237,14 @@ export default function Contact() {
                         <div>
                             <label className="form-label">Subject</label>
                             <input type="text" required value={formState.subject}
+                                onFocus={() => { setFocusedField('subject'); setShowKeyboard(true); }}
                                 onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
                                 className="form-input" placeholder="Project Collaboration" />
                         </div>
                         <div>
                             <label className="form-label">Message</label>
                             <textarea required rows={4} value={formState.message}
+                                onFocus={() => { setFocusedField('message'); setShowKeyboard(true); }}
                                 onChange={(e) => setFormState({ ...formState, message: e.target.value })}
                                 className="form-input" placeholder="Tell me about your project..." />
                         </div>
@@ -158,3 +279,4 @@ export default function Contact() {
         </section>
     );
 }
+
